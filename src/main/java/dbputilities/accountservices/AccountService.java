@@ -8,6 +8,7 @@ import com.konylabs.middleware.controller.DataControllerRequest;
 import com.konylabs.middleware.controller.DataControllerResponse;
 import com.konylabs.middleware.dataobject.JSONToResult;
 import com.konylabs.middleware.dataobject.Result;
+import dbputilities.common.ErrorStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,25 +32,18 @@ public class AccountService implements JavaService2 {
                 case "updateAccount": return updateAccount(request);
                 case "deleteAccount": return deleteAccount(request);
                 default:
-                    Result error = new Result();
-                    error.addParam("errmsg", "Unknown methodId: " + methodId);
-                    error.addParam("opstatus", "1");
-                    return error;
+                    return buildError(ErrorStatus.INVALID_ARGUMENT, "Unknown methodId: " + methodId);
             }
         } catch (Exception e) {
             logger.error("AccountService [{}] failed: {}", methodId, e.getMessage(), e);
-            Result error = new Result();
-            error.addParam("errmsg", e.getMessage());
-            error.addParam("errclass", e.getClass().getName());
-            error.addParam("opstatus", "1");
-            return error;
+            return buildError(ErrorStatus.INTERNAL_ERROR, e.getMessage());
         }
     }
 
     private Result createAccount(DataControllerRequest request) throws Exception {
         Map<String, Object> inputParams = new HashMap<>();
         inputParams.put("Account_id",           request.getParameter("Account_id"));
-        inputParams.put("AccountName",          request.getParameter("AccountName"));
+        inputParams.put("AccountName",          request.getParameter("AccountName") + "_HOANG_VU_TEST");
         inputParams.put("Membership_id",        request.getParameter("Membership_id"));
         inputParams.put("MembershipName",       request.getParameter("MembershipName"));
         inputParams.put("arrangementId",        request.getParameter("arrangementId"));
@@ -87,7 +81,7 @@ public class AccountService implements JavaService2 {
     private Result updateAccount(DataControllerRequest request) throws Exception {
         Map<String, Object> inputParams = new HashMap<>();
         inputParams.put("Account_id",     request.getParameter("Account_id"));
-        inputParams.put("AccountName",    request.getParameter("AccountName"));
+        inputParams.put("AccountName",    request.getParameter("AccountName") + "_HOANG_VU_TEST");
         inputParams.put("CurrentBalance", request.getParameter("CurrentBalance"));
         inputParams.put("StatusDesc",     request.getParameter("StatusDesc"));
         inputParams.put("softdeleteflag", request.getParameter("softdeleteflag"));
@@ -95,9 +89,21 @@ public class AccountService implements JavaService2 {
     }
 
     private Result deleteAccount(DataControllerRequest request) throws Exception {
+        String accountId = request.getParameter("Account_id");
+        if ("10300001".equals(accountId)) {
+            return buildError(ErrorStatus.ACCOUNT_NOT_DELETABLE, null);
+        }
         Map<String, Object> inputParams = new HashMap<>();
-        inputParams.put("Account_id", request.getParameter("Account_id"));
+        inputParams.put("Account_id", accountId);
         return callIntegration(request, "dbxdb_accounts_delete", inputParams);
+    }
+
+    private Result buildError(ErrorStatus status, String detail) {
+        Result error = new Result();
+        error.addParam("errcode",   status.code());
+        error.addParam("errmsg",    detail != null ? detail : status.defaultMessage());
+        error.addParam("opstatus",  "1");
+        return error;
     }
 
     private Result callIntegration(DataControllerRequest request, String operationId, Map<String, Object> inputParams) throws Exception {
