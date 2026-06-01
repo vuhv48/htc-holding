@@ -6,7 +6,10 @@ import com.konylabs.middleware.api.ServicesManager;
 import com.konylabs.middleware.common.JavaService2;
 import com.konylabs.middleware.controller.DataControllerRequest;
 import com.konylabs.middleware.controller.DataControllerResponse;
+import com.konylabs.middleware.dataobject.Dataset;
 import com.konylabs.middleware.dataobject.JSONToResult;
+import com.konylabs.middleware.dataobject.Param;
+import com.konylabs.middleware.dataobject.Record;
 import com.konylabs.middleware.dataobject.Result;
 import dbputilities.common.ErrorStatus;
 import org.apache.logging.log4j.LogManager;
@@ -75,7 +78,21 @@ public class AccountService implements JavaService2 {
     private Result getAccount(DataControllerRequest request) throws Exception {
         Map<String, Object> inputParams = new HashMap<>();
         inputParams.put("Membership_id", request.getParameter("Membership_id"));
-        return callIntegration(request, "dbxdb_accounts_get", inputParams);
+        Result result = callIntegration(request, "dbxdb_accounts_get", inputParams);
+
+//        // [START] them field testHoangVanVu vao tung record
+//        Dataset ds = result.getDatasetById("accounts");
+//        if (ds != null) {
+//            for (Record record : ds.getAllRecords()) {
+//                Param p = new Param();
+//                p.setName("testHoangVanVu");
+//                p.setValue("hoang van vu");
+//                record.addParam(p);
+//            }
+//        }
+//        // [END] them field testHoangVanVu vao tung record
+
+        return result;
     }
 
     private Result updateAccount(DataControllerRequest request) throws Exception {
