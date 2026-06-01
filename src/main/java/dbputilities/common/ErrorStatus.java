@@ -22,6 +22,7 @@ public enum ErrorStatus {
     ACCOUNT_NOT_DELETABLE(403, "ACCOUNT_NOT_DELETABLE", "Tài khoản không được phép xóa"),
     ACCOUNT_NOT_FOUND(404, "ACCOUNT_NOT_FOUND", "Không tìm thấy tài khoản"),
     ADDRESS_NOT_FOUND(404, "ADDRESS_NOT_FOUND", "Không tìm thấy địa chỉ"),
+    LOCATION_NOT_FOUND(404, "LOCATION_NOT_FOUND", "Không tìm thấy chi nhánh / địa điểm"),
     ILLEGAL_STATE(409, "ILLEGAL_STATE", "Trạng thái không hợp lệ"),
 
     // —— Hệ thống ——
