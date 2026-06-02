@@ -34,7 +34,7 @@ public class LocationGetPostprocessor implements DataPostProcessor2 {
         for (Record record : sourceDs.getAllRecords()) {
             Param flagParam = record.getParamByName("softdeleteflag");
             String flag = (flagParam != null) ? flagParam.getValue() : null;
-            if ("false".equalsIgnoreCase(flag)) {
+            if ("true".equalsIgnoreCase(flag)) {
                 logger.info("Filtered soft-deleted location: {}",
                         record.getParamByName("id") != null ? record.getParamByName("id").getValue() : "unknown");
             } else {
