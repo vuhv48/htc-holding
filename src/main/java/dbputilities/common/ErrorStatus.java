@@ -1,6 +1,7 @@
 package dbputilities.common;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -28,8 +29,8 @@ public enum ErrorStatus {
     // —— Hệ thống ——
     INTERNAL_ERROR(500, "INTERNAL_ERROR", "Lỗi hệ thống không mong đợi");
 
-    private static final Map<String, ErrorStatus> BY_CODE = Arrays.stream(values())
-            .collect(Collectors.toUnmodifiableMap(ErrorStatus::code, Function.identity()));
+    private static final Map<String, ErrorStatus> BY_CODE = Collections.unmodifiableMap(
+            Arrays.stream(values()).collect(Collectors.toMap(ErrorStatus::code, Function.identity())));
 
     private final int httpStatus;
     private final String code;
