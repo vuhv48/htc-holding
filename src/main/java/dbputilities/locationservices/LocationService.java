@@ -27,9 +27,9 @@ public class LocationService implements JavaService2 {
         logger.info("LocationService invoked, methodId={}", methodId);
         try {
             switch (methodId) {
-                case "createLocation": return createLocation(request, inputArray);
-                case "getLocation":    return getLocation(request, inputArray);
-                case "updateLocation": return updateLocation(request, inputArray);
+                case "createLocation":  return createLocation(request, inputArray);
+                case "getLocation":     return getLocation(request, inputArray);
+                case "updateLocation":  return updateLocation(request, inputArray);
                 case "deleteLocation":  return deleteLocation(request, inputArray);
                 case "getLocationById": return getLocationById(request, inputArray);
                 default:
@@ -42,13 +42,24 @@ public class LocationService implements JavaService2 {
     }
 
     private Result createLocation(DataControllerRequest request, Object[] inputArray) throws Exception {
+        // Lấy toàn bộ params từ inputArray, truyền thẳng vào DB operation
         Map<String, Object> params = getInputParams(inputArray);
         return callIntegration(request, "dbxdb_location_create", params);
     }
 
     private Result getLocation(DataControllerRequest request, Object[] inputArray) throws Exception {
         Map<String, Object> params = getInputParams(inputArray);
-        params.put("id", request.getParameter("id"));
+
+        // Pagination theo chuẩn OData: $top = số record mỗi trang, $skip = số record bỏ qua
+        // page là 1-based: page=1 → skip=0, page=2 → skip=pageSize, ...
+        int page     = parseIntOrDefault(request.getParameter("page"),     1);
+        int pageSize = parseIntOrDefault(request.getParameter("pageSize"), 10);
+        int skip     = (page - 1) * pageSize;
+
+        params.put("$top",  String.valueOf(pageSize));
+        params.put("$skip", String.valueOf(skip));
+
+        logger.info("getLocation page={} pageSize={} skip={}", page, pageSize, skip);
         return callIntegration(request, "dbxdb_location_get", params);
     }
 
@@ -58,6 +69,8 @@ public class LocationService implements JavaService2 {
     }
 
     private Result getLocationById(DataControllerRequest request, Object[] inputArray) throws Exception {
+        // Dùng operation dbxdb_getLocations thay vì dbxdb_location_get
+        // vì operation này nhận locationId làm filter, trả về đúng 1 record
         Map<String, Object> params = getInputParams(inputArray);
         return callIntegration(request, "dbxdb_getLocations", params);
     }
@@ -67,6 +80,8 @@ public class LocationService implements JavaService2 {
         return callIntegration(request, "dbxdb_location_delete", params);
     }
 
+    // inputArray[1] là Map params do Fabric truyền vào — dùng thay cho request.getParameter()
+    // để nhận được cả params từ Orchestration step output, không chỉ HTTP request
     @SuppressWarnings("unchecked")
     private Map<String, Object> getInputParams(Object[] inputArray) {
         if (inputArray != null && inputArray.length > 1 && inputArray[1] instanceof Map) {
@@ -81,6 +96,15 @@ public class LocationService implements JavaService2 {
         error.addParam("errmsg",   detail != null ? detail : status.defaultMessage());
         error.addParam("opstatus", "1");
         return error;
+    }
+
+    // Trả về defaultValue nếu value null, rỗng, hoặc không parse được thành số
+    private int parseIntOrDefault(String value, int defaultValue) {
+        try {
+            return (value != null && !value.trim().isEmpty()) ? Integer.parseInt(value.trim()) : defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     private Result callIntegration(DataControllerRequest request, String operationId, Map<String, Object> inputParams) throws Exception {
